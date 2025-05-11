@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8">
+  <title>schedule-widget-Tchan</title>
+  
+
+</head>
+<body>
+<!-- partial:index.partial.html -->
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>日時選択ウィジェット</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        parrot: {
+                            orange: '#FF9800',
+                            yellow: '#FFC107',
+                            green: '#4CAF50',
+                            lightgreen: '#8BC34A',
+                            lightorange: '#FFB74D'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background-color: transparent;
+        }
+        .calendar-container {
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+            background: transparent;
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #FF9800 0%, #FF5722 100%);
+        }
+        .gradient-hover {
+            transition: all 0.3s ease;
+        }
+        .gradient-hover:hover {
+            background: linear-gradient(135deg, #FF5722 0%, #E64A19 100%);
+            transform: translateY(-2px);
+        }
+        input[type="date"], select {
+            cursor: pointer;
+        }
+        .result-text {
+            transition: all 0.3s ease;
+        }
+        .date-item {
+            animation: fadeIn 0.4s ease-in-out;
+            transition: all 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .date-item-remove {
+            animation: fadeOut 0.3s ease-in-out;
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(10px); }
+        }
+        .card {
+            background-color: rgba(255, 248, 225, 0.7);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 193, 7, 0.3);
+        }
+        /* カスタムラジオボタン */
+        input[type="radio"] {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #FF9800;
+            border-radius: 50%;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+        input[type="radio"]:checked {
+            border-color: #FF9800;
+            background-color: #FF9800;
+            box-shadow: inset 0 0 0 3px white;
+        }
+        input[type="radio"]:focus {
+            box-shadow: 0 0 0 2px rgba(255, 152, 0, 0.2), inset 0 0 0 3px white;
+        }
+        /* カスタムチェックボックス */
+        input[type="checkbox"] {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #FF9800;
+            border-radius: 4px;
+            outline: none;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        input[type="checkbox"]:checked {
+            border-color: #FF9800;
+            background-color: #FF9800;
+        }
+        input[type="checkbox"]:checked::after {
+            content: '';
+            position: absolute;
+            left: 5px;
+            top: 2px;
+            width: 4px;
+            height: 8px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+        input[type="checkbox"]:focus {
+            box-shadow: 0 0 0 2px rgba(255, 152, 0, 0.2);
+        }
+        /* 新しいボタンアニメーション */
+        .btn-animation {
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-animation:after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 5px;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.5);
+            opacity: 0;
+            border-radius: 100%;
+            transform: scale(1, 1) translate(-50%);
+            transform-origin: 50% 50%;
+        }
+        .btn-animation:focus:not(:active)::after {
+            animation: ripple 1s ease-out;
+        }
+        @keyframes ripple {
+            0% {
+                transform: scale(0, 0);
+                opacity: 0.5;
+            }
+            20% {
+                transform: scale(25, 25);
+                opacity: 0.5;
+            }
+            100% {
+                opacity: 0;
+                transform: scale(40, 40);
+            }
+        }
+        /* コピー成功時のアニメーション */
+        @keyframes copySuccess {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .copy-success {
+            animation: copySuccess 0.4s ease;
+        }
+        /* 追加ボタンのアニメーション */
+        @keyframes addSuccess {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); box-shadow: 0 0 15px rgba(255, 152, 0, 0.6); }
+            100% { transform: scale(1); }
+        }
+        .add-success {
+            animation: addSuccess 0.6s ease;
+        }
+        /* キラキラエフェクト */
+        .sparkle {
+            position: relative;
+        }
+        .sparkle:before, .sparkle:after {
+            content: '';
+            position: absolute;
+            background: white;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            opacity: 0;
+            z-index: 10;
+        }
+        .sparkle:before {
+            top: -5px;
+            left: -5px;
+        }
+        .sparkle:after {
+            bottom: -5px;
+            right: -5px;
+        }
+        .sparkle-animation:before {
+            animation: sparkleTop 0.6s ease-out;
+        }
+        .sparkle-animation:after {
+            animation: sparkleBottom 0.6s ease-out 0.1s;
+        }
+        @keyframes sparkleTop {
+            0% { transform: scale(0); opacity: 0; }
+            50% { transform: scale(1); opacity: 0.8; }
+            100% { transform: scale(0); opacity: 0; }
+        }
+        @keyframes sparkleBottom {
+            0% { transform: scale(0); opacity: 0; }
+            50% { transform: scale(1); opacity: 0.8; }
+            100% { transform: scale(0); opacity: 0; }
+        }
+        
+        /* カスタム日付選択スタイル */
+        input[type="date"] {
+            position: relative;
+        }
+        
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            background: transparent;
+            color: transparent;
+            cursor: pointer;
+            height: 100%;
+            left: 0;
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 100%;
+        }
+        
+        .date-input-container {
+            position: relative;
+        }
+        
+        .date-input-container:after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            right: 10px;
+            transform: translateY(-50%);
+            pointer-events: none;
+            width: 20px;
+            height: 20px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23FF9800'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+        
+        /* 時間選択コンテナ */
+        .time-selection {
+            transition: all 0.3s ease;
+        }
+        
+        .time-selection.disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        
+        /* 日付リストのスクロールバーをカスタマイズ */
+        #date-list {
+            scrollbar-width: thin;
+            scrollbar-color: #FFB74D #FFF8E1;
+            overflow-x: hidden; /* 横スクロールを無効化 */
+            max-width: 100%; /* 幅を制限 */
+            word-break: break-word; /* 長いテキストを折り返す */
+        }
+        
+        #date-list::-webkit-scrollbar {
+            width: 6px;
+            height: 0; /* 横スクロールバーの高さを0に */
+        }
+        
+        #date-list::-webkit-scrollbar-track {
+            background: #FFF8E1;
+            border-radius: 10px;
+        }
+        
+        #date-list::-webkit-scrollbar-thumb {
+            background-color: #FFB74D;
+            border-radius: 10px;
+            border: 2px solid #FFF8E1;
+        }
+        
+        /* 日付アイテムのスタイル調整 */
+        .date-item {
+            width: 100%;
+            box-sizing: border-box;
+            white-space: normal; /* テキストを折り返す */
+        }
+        
+        /* コガネメキシコインコスタイル */
+        .parrot-bg {
+            background: linear-gradient(135deg, #FFF8E1 0%, #FFECB3 100%);
+        }
+        
+        .parrot-card {
+            border: 2px solid #FFC107;
+            box-shadow: 0 4px 6px rgba(255, 193, 7, 0.1);
+        }
+        
+        .parrot-header {
+            background: linear-gradient(90deg, #FF9800 0%, #FFC107 100%);
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+        }
+        
+        /* キャラクター選択スタイル - 色を逆にする */
+        .character-option {
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            background-color: #FFF8E1; /* 未選択時は薄いオレンジ色 */
+        }
+        
+        .character-option.selected {
+            border-color: #FF9800;
+            background-color: white; /* 選択時は白色 */
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(255, 152, 0, 0.2);
+        }
+        
+        /* 選択インジケーター */
+        .character-option.selected::after {
+            content: '✓';
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background-color: #FF9800;
+            color: white;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        /* パロットアニメーション */
+        @keyframes parrotBounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .parrot-icon {
+            animation: parrotBounce 2s infinite ease-in-out;
+            display: inline-block;
+        }
+        
+        /* キャラクター選択のホバーエフェクト */
+        .character-option:hover:not(.selected) {
+            border-color: #FFB74D;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(255, 152, 0, 0.1);
+        }
+    </style>
+</head>
+<body style="background: linear-gradient(135deg, #FFF8E1 0%, #FFFDE7 100%);">
+    <div class="min-h-screen flex items-center justify-center p-4">
+        <div class="calendar-container rounded-xl p-6 w-full max-w-4xl">
+            <div class="flex flex-col md:flex-row gap-6">
+                <!-- 左側：入力エリア -->
+                <div class="w-full md:w-1/2 space-y-4">
+                    <div class="card p-5 rounded-xl shadow-sm parrot-card">
+                        <div class="grid grid-cols-1 gap-4">
+                            <!-- キャラクター選択 -->
+                            <div>
+                                <label class="block text-sm font-medium text-parrot-orange mb-2">キャラクター選択</label>
+                                <div class="flex gap-3">
+                                    <div id="tee-chan" class="character-option flex-1 border-2 border-parrot-lightorange rounded-lg p-3 flex flex-col items-center selected">
+                                        <span class="text-2xl mb-1">🦜</span>
+                                        <span class="text-parrot-orange font-medium">ティーちゃん</span>
+                                    </div>
+                                    <div id="coco-chan" class="character-option flex-1 border-2 border-gray-200 rounded-lg p-3 flex flex-col items-center">
+                                        <span class="text-2xl mb-1">🦜</span>
+                                        <span class="text-gray-500 font-medium">ココちゃん</span>
+                                    </div>
+                                </div>
+                                <p class="text-xs text-parrot-orange mt-2 text-center">※選んだキャラクターの名前が日時の末尾に追加されます</p>
+                            </div>
+                            
+                            <!-- 日付選択と時刻なしオプション -->
+                            <div>
+                                <div class="flex justify-between items-center mb-1">
+                                    <label for="date-picker" class="block text-sm font-medium text-parrot-orange">日付</label>
+                                    <div class="flex items-center">
+                                        <input 
+                                            type="checkbox" 
+                                            id="no-time" 
+                                            class="mr-2"
+                                        >
+                                        <label for="no-time" class="text-sm text-parrot-orange">時刻なし</label>
+                                    </div>
+                                </div>
+                                <div class="date-input-container">
+                                    <input 
+                                        type="date" 
+                                        id="date-picker" 
+                                        class="w-full px-3 py-2 border border-parrot-yellow rounded-lg focus:outline-none focus:ring-2 focus:ring-parrot-orange bg-white text-parrot-orange"
+                                    >
+                                </div>
+                            </div>
+                            
+                            <!-- 時間選択（開始・終了） -->
+                            <div id="time-selection" class="time-selection grid grid-cols-2 gap-3">
+                                <div>
+                                    <label for="start-time" class="block text-sm font-medium text-parrot-orange mb-1">開始時刻</label>
+                                    <select 
+                                        id="start-time" 
+                                        class="w-full px-3 py-2 border border-parrot-yellow rounded-lg focus:outline-none focus:ring-2 focus:ring-parrot-orange bg-white text-parrot-orange"
+                                    >
+                                        <!-- 時間オプションはJSで生成 -->
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="end-time" class="block text-sm font-medium text-parrot-orange mb-1">終了時刻</label>
+                                    <select 
+                                        id="end-time" 
+                                        class="w-full px-3 py-2 border border-parrot-yellow rounded-lg focus:outline-none focus:ring-2 focus:ring-parrot-orange bg-white text-parrot-orange"
+                                    >
+                                        <!-- 時間オプションはJSで生成 -->
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <!-- 追加ボタン -->
+                            <button 
+                                id="add-btn"
+                                class="w-full gradient-bg gradient-hover text-white font-medium py-2.5 px-4 rounded-lg transition duration-300 ease-in-out shadow-md btn-animation sparkle"
+                            >
+                                ＋ 日時を追加
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 右側：結果エリア -->
+                <div class="w-full md:w-1/2 space-y-4">
+                    <!-- 選択された日時のリスト -->
+                    <div class="card p-4 rounded-xl shadow-sm parrot-card">
+                        <div class="flex justify-between items-center mb-3">
+                            <h2 class="text-base font-medium text-parrot-orange">選択された日時</h2>
+                        </div>
+                        <div id="date-list" class="space-y-2 max-h-[120px] overflow-y-auto">
+                            <!-- ここに選択された日時が追加されます -->
+                        </div>
+                    </div>
+                    
+                    <!-- 結果表示エリア -->
+                    <div class="card p-4 rounded-xl shadow-sm parrot-card">
+                        <div class="flex justify-between items-center mb-2">
+                            <h2 class="text-base font-medium text-parrot-orange">テキスト出力</h2>
+                            <button 
+                                id="copy-btn"
+                                class="text-sm gradient-bg hover:bg-parrot-orange text-white font-medium py-1 px-3 rounded-md transition duration-300 ease-in-out flex items-center gap-1 btn-animation"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                </svg>
+                                コピー
+                            </button>
+                        </div>
+                        <textarea 
+                            id="result" 
+                            class="result-text w-full h-40 p-3 text-parrot-orange border border-parrot-yellow rounded-lg focus:outline-none focus:ring-2 focus:ring-parrot-orange resize-none bg-white bg-opacity-90"
+                            readonly
+                        >選択された日時がここに表示されます</textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // キャラクター選択の処理
+            const teeChan = document.getElementById('tee-chan');
+            const cocoChan = document.getElementById('coco-chan');
+            let selectedCharacter = 'tee'; // デフォルトはティーちゃん
+            
+            teeChan.addEventListener('click', function() {
+                teeChan.classList.add('selected');
+                cocoChan.classList.remove('selected');
+                selectedCharacter = 'tee';
+                
+                // テキストの色を更新
+                teeChan.querySelector('span:last-child').classList.remove('text-gray-500');
+                teeChan.querySelector('span:last-child').classList.add('text-parrot-orange');
+                cocoChan.querySelector('span:last-child').classList.remove('text-parrot-orange');
+                cocoChan.querySelector('span:last-child').classList.add('text-gray-500');
+                
+                updateResult(); // キャラクター変更時に結果を更新
+            });
+            
+            cocoChan.addEventListener('click', function() {
+                cocoChan.classList.add('selected');
+                teeChan.classList.remove('selected');
+                selectedCharacter = 'coco';
+                
+                // テキストの色を更新
+                cocoChan.querySelector('span:last-child').classList.remove('text-gray-500');
+                cocoChan.querySelector('span:last-child').classList.add('text-parrot-orange');
+                teeChan.querySelector('span:last-child').classList.remove('text-parrot-orange');
+                teeChan.querySelector('span:last-child').classList.add('text-gray-500');
+                
+                updateResult(); // キャラクター変更時に結果を更新
+            });
+            
+            // 時間選択肢を生成（15分単位）
+            function populateTimeOptions(selectElement) {
+                for (let hour = 0; hour < 24; hour++) {
+                    for (let minute of [0, 15, 30, 45]) {
+                        const hourStr = String(hour).padStart(2, '0');
+                        const minuteStr = String(minute).padStart(2, '0');
+                        const timeValue = `${hourStr}:${minuteStr}`;
+                        const timeDisplay = `${hour}:${minuteStr}`;
+                        
+                        const option = document.createElement('option');
+                        option.value = timeValue;
+                        option.textContent = timeDisplay;
+                        selectElement.appendChild(option);
+                    }
+                }
+            }
+            
+            const startTimeSelect = document.getElementById('start-time');
+            const endTimeSelect = document.getElementById('end-time');
+            const noTimeCheckbox = document.getElementById('no-time');
+            const timeSelectionContainer = document.getElementById('time-selection');
+            
+            populateTimeOptions(startTimeSelect);
+            populateTimeOptions(endTimeSelect);
+            
+            // 今日の日付をデフォルトにする
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            document.getElementById('date-picker').value = `${yyyy}-${mm}-${dd}`;
+            
+            // 現在時刻に基づいて次の時間帯をデフォルトに設定
+            const currentHour = today.getHours();
+            const currentMinute = today.getMinutes();
+            
+            // 次の時間帯を計算（現在の分が45分以上なら次の時間の0分、それ以外は現在の時間の次の15分単位）
+            let startHour, startMinute;
+            
+            if (currentMinute >= 45) {
+                startHour = (currentHour + 1) % 24;
+                startMinute = 0;
+            } else {
+                startHour = currentHour;
+                startMinute = Math.ceil(currentMinute / 15) * 15;
+            }
+            
+            const defaultStartTime = `${String(startHour).padStart(2, '0')}:${String(startMinute).padStart(2, '0')}`;
+            
+            // 終了時間は開始時間の1時間後をデフォルトに
+            let endHour = (startHour + 1) % 24;
+            let endMinute = startMinute;
+            
+            const defaultEndTime = `${String(endHour).padStart(2, '0')}:${String(endMinute).padStart(2, '0')}`;
+            
+            startTimeSelect.value = defaultStartTime;
+            endTimeSelect.value = defaultEndTime;
+            
+            // 時刻なしチェックボックスの処理
+            noTimeCheckbox.addEventListener('change', function() {
+                if (this.checked) {
+                    timeSelectionContainer.classList.add('disabled');
+                } else {
+                    timeSelectionContainer.classList.remove('disabled');
+                }
+            });
+            
+            // 開始時間が変更されたら、終了時間も自動調整（1時間後に設定）
+            startTimeSelect.addEventListener('change', function() {
+                const startTime = this.value;
+                const [startHourStr, startMinuteStr] = startTime.split(':');
+                const startHour = parseInt(startHourStr);
+                const startMinute = parseInt(startMinuteStr);
+                
+                // 終了時間を開始時間の1時間後に設定（24時間を超える場合は循環）
+                const newEndHour = (startHour + 1) % 24;
+                const newEndMinute = startMinute;
+                
+                endTimeSelect.value = `${String(newEndHour).padStart(2, '0')}:${String(newEndMinute).padStart(2, '0')}`;
+            });
+            
+            // 選択された日時を保存する配列
+            let selectedDates = [];
+            
+            // 追加ボタンのクリックイベント
+            document.getElementById('add-btn').addEventListener('click', addDateTime);
+            
+            // コピーボタンのクリックイベント
+            document.getElementById('copy-btn').addEventListener('click', copyResult);
+            
+            function addDateTime() {
+                const datePicker = document.getElementById('date-picker');
+                const noTime = document.getElementById('no-time').checked;
+                
+                // 日付が選択されているか確認
+                if (!datePicker.value) {
+                    alert('日付を選択してください');
+                    return;
+                }
+                
+                let dateTimeCombo;
+                
+                if (noTime) {
+                    // 時刻なしの場合
+                    const selectedDate = new Date(datePicker.value);
+                    dateTimeCombo = {
+                        date: selectedDate,
+                        noTime: true
+                    };
+                    
+                    // 重複チェック
+                    const isDuplicate = selectedDates.some(item => 
+                        item.noTime && 
+                        item.date.getFullYear() === selectedDate.getFullYear() &&
+                        item.date.getMonth() === selectedDate.getMonth() &&
+                        item.date.getDate() === selectedDate.getDate()
+                    );
+                    
+                    if (isDuplicate) {
+                        alert('この日付は既に追加されています');
+                        return;
+                    }
+                } else {
+                    // 時刻ありの場合
+                    const startTime = document.getElementById('start-time').value;
+                    const endTime = document.getElementById('end-time').value;
+                    
+                    // 選択された日付と時間を取得
+                    const startDate = new Date(`${datePicker.value}T${startTime}`);
+                    
+                    // 終了時間の処理
+                    const [endHourStr, endMinuteStr] = endTime.split(':');
+                    const endHour = parseInt(endHourStr);
+                    const endMinute = parseInt(endMinuteStr);
+                    
+                    // 開始時間の取得
+                    const [startHourStr, startMinuteStr] = startTime.split(':');
+                    const startHour = parseInt(startHourStr);
+                    const startMinute = parseInt(startMinuteStr);
+                    
+                    // 終了日を計算（開始時間より前なら翌日と判断）
+                    const endDate = new Date(`${datePicker.value}T${endTime}`);
+                    if (endHour < startHour || (endHour === startHour && endMinute <= startMinute)) {
+                        endDate.setDate(endDate.getDate() + 1);
+                    }
+                    
+                    dateTimeCombo = {
+                        start: startDate,
+                        end: endDate,
+                        noTime: false
+                    };
+                    
+                    // 重複チェック
+                    const isDuplicate = selectedDates.some(item => 
+                        !item.noTime &&
+                        item.start.getTime() === dateTimeCombo.start.getTime() && 
+                        item.end.getTime() === dateTimeCombo.end.getTime()
+                    );
+                    
+                    if (isDuplicate) {
+                        alert('この日時は既に追加されています');
+                        return;
+                    }
+                }
+                
+                // 配列に追加
+                selectedDates.push(dateTimeCombo);
+                
+                // 日付をソート（古い順）
+                selectedDates.sort((a, b) => {
+                    const dateA = a.noTime ? a.date : a.start;
+                    const dateB = b.noTime ? b.date : b.start;
+                    return dateA - dateB;
+                });
+                
+                // リストを更新
+                updateDateList();
+                
+                // 結果を更新
+                updateResult();
+                
+                // 追加ボタンにアニメーション効果
+                const addBtn = document.getElementById('add-btn');
+                addBtn.classList.add('add-success');
+                addBtn.classList.add('sparkle-animation');
+                setTimeout(() => {
+                    addBtn.classList.remove('add-success');
+                    addBtn.classList.remove('sparkle-animation');
+                }, 600);
+            }
+            
+            function formatDateTime(dateTimeCombo) {
+                // キャラクターに基づいたサフィックス
+                const characterSuffix = selectedCharacter === 'tee' ? ' ティーちゃん' : ' ココちゃん';
+                
+                // マンゴーの絵文字を先頭に追加
+                const prefix = '🥭 ';
+                
+                if (dateTimeCombo.noTime) {
+                    // 時刻なしの場合
+                    const date = dateTimeCombo.date;
+                    
+                    // 日本語の曜日
+                    const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
+                    
+                    // 月と日を取得
+                    const month = date.getMonth() + 1;
+                    const day = date.getDate();
+                    const weekday = date.getDay();
+                    
+                    // ノーマル表示
+                    return prefix + `${month}月${day}日（${weekdays[weekday]}）` + characterSuffix;
+                } else {
+                    // 時刻ありの場合
+                    const startDate = dateTimeCombo.start;
+                    const endDate = dateTimeCombo.end;
+                    
+                    // 日本語の曜日
+                    const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
+                    
+                    // 月と日を取得
+                    const startMonth = startDate.getMonth() + 1;
+                    const startDay = startDate.getDate();
+                    const startWeekday = startDate.getDay();
+                    
+                    // 開始時間と分を取得
+                    const startHours = startDate.getHours();
+                    const startMinutes = String(startDate.getMinutes()).padStart(2, '0');
+                    
+                    // 終了時間と分を取得
+                    const endHours = endDate.getHours();
+                    const endMinutes = String(endDate.getMinutes()).padStart(2, '0');
+                    
+                    // 日付が異なる場合（翌日にまたがる場合）
+                    const isSameDay = startDate.getDate() === endDate.getDate() && 
+                                     startDate.getMonth() === endDate.getMonth() && 
+                                     startDate.getFullYear() === endDate.getFullYear();
+                    
+                    if (!isSameDay) {
+                        // 翌日にまたがる場合の表示
+                        const endMonth = endDate.getMonth() + 1;
+                        const endDay = endDate.getDate();
+                        const endWeekday = endDate.getDay();
+                        
+                        // ノーマル表示
+                        return prefix + `${startMonth}月${startDay}日（${weekdays[startWeekday]}） ${startHours}:${startMinutes}〜${endMonth}月${endDay}日（${weekdays[endWeekday]}） ${endHours}:${endMinutes}` + characterSuffix;
+                    } else {
+                        // 同じ日の場合
+                        // ノーマル表示
+                        return prefix + `${startMonth}月${startDay}日（${weekdays[startWeekday]}） ${startHours}:${startMinutes}〜${endHours}:${endMinutes}` + characterSuffix;
+                    }
+                }
+            }
+            
+            function updateDateList() {
+                const dateList = document.getElementById('date-list');
+                dateList.innerHTML = '';
+                
+                if (selectedDates.length === 0) {
+                    const emptyMessage = document.createElement('div');
+                    emptyMessage.className = 'text-parrot-orange text-sm italic text-center py-2';
+                    emptyMessage.textContent = '日時が選択されていません';
+                    dateList.appendChild(emptyMessage);
+                    return;
+                }
+                
+                selectedDates.forEach((dateTimeCombo, index) => {
+                    const dateItem = document.createElement('div');
+                    dateItem.className = 'date-item flex justify-between items-center p-2 bg-white bg-opacity-70 rounded-lg border border-parrot-yellow';
+                    dateItem.dataset.index = index;
+                    
+                    const dateText = document.createElement('span');
+                    dateText.className = 'text-sm text-parrot-orange';
+                    dateText.textContent = formatDateTime(dateTimeCombo);
+                    
+                    const removeBtn = document.createElement('button');
+                    removeBtn.className = 'text-parrot-orange hover:text-parrot-orange focus:outline-none flex-shrink-0 ml-2';
+                    removeBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg>';
+                    removeBtn.addEventListener('click', function() {
+                        removeDateItem(index, dateItem);
+                    });
+                    
+                    const textContainer = document.createElement('div');
+                    textContainer.className = 'flex-grow pr-2';
+                    textContainer.appendChild(dateText);
+                    
+                    dateItem.appendChild(textContainer);
+                    dateItem.appendChild(removeBtn);
+                    dateList.appendChild(dateItem);
+                });
+            }
+            
+            function removeDateItem(index, element) {
+                // アニメーション効果を追加
+                element.classList.add('date-item-remove');
+                
+                setTimeout(() => {
+                    // 配列から削除
+                    selectedDates.splice(index, 1);
+                    
+                    // リストを更新
+                    updateDateList();
+                    
+                    // 結果を更新
+                    updateResult();
+                }, 300);
+            }
+            
+            function updateResult() {
+                const result = document.getElementById('result');
+                
+                if (selectedDates.length === 0) {
+                    result.value = '選択された日時がここに表示されます';
+                    return;
+                }
+                
+                // 選択された日時を整形して結合
+                const formattedDates = selectedDates.map(dateTimeCombo => 
+                    formatDateTime(dateTimeCombo)
+                );
+                
+                result.value = formattedDates.join('\n');
+                
+                // テキストエリアにアニメーション効果
+                result.style.opacity = '0.7';
+                setTimeout(() => {
+                    result.style.opacity = '1';
+                }, 150);
+            }
+            
+            function copyResult() {
+                const result = document.getElementById('result');
+                const copyBtn = document.getElementById('copy-btn');
+                
+                // テキストが空または初期値の場合はコピーしない
+                if (result.value === '' || result.value === '選択された日時がここに表示されます') {
+                    alert('コピーするテキストがありません');
+                    return;
+                }
+                
+                // テキストを選択してコピー
+                result.select();
+                document.execCommand('copy');
+                
+                // 選択を解除
+                window.getSelection().removeAllRanges();
+                
+                // コピー成功のフィードバック
+                const originalText = copyBtn.innerHTML;
+                copyBtn.classList.add('copy-success');
+                copyBtn.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    コピー完了
+                `;
+                
+                // 元に戻す
+                setTimeout(() => {
+                    copyBtn.classList.remove('copy-success');
+                    copyBtn.innerHTML = originalText;
+                }, 2000);
+            }
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93e5964dc51cd553',t:'MTc0NzAwNzUxNi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
+<!-- partial -->
+  
+</body>
+</html>
