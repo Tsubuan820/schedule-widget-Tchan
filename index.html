@@ -38,11 +38,11 @@
     <style>
         body {
             font-family: 'Noto Sans JP', sans-serif;
-            background-color: transparent;
+            background-color: transparent !important;
         }
         .calendar-container {
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
-            background: transparent;
+            background: transparent !important;
         }
         .gradient-bg {
             background: linear-gradient(135deg, #FF9800 0%, #FF5722 100%);
@@ -76,7 +76,7 @@
             to { opacity: 0; transform: translateY(10px); }
         }
         .card {
-            background-color: rgba(255, 248, 225, 0.7);
+            background-color: rgba(255, 248, 225, 0.85);
             backdrop-filter: blur(5px);
             border: 1px solid rgba(255, 193, 7, 0.3);
         }
@@ -300,7 +300,7 @@
         
         /* コガネメキシコインコスタイル */
         .parrot-bg {
-            background: linear-gradient(135deg, #FFF8E1 0%, #FFECB3 100%);
+            background: transparent !important;
         }
         
         .parrot-card {
@@ -364,9 +364,14 @@
             transform: translateY(-1px);
             box-shadow: 0 2px 4px rgba(255, 152, 0, 0.1);
         }
+        
+        /* 背景を完全に透過に */
+        html, body {
+            background: transparent !important;
+        }
     </style>
 </head>
-<body style="background: linear-gradient(135deg, #FFF8E1 0%, #FFFDE7 100%);">
+<body>
     <div class="min-h-screen flex items-center justify-center p-4">
         <div class="calendar-container rounded-xl p-6 w-full max-w-4xl">
             <div class="flex flex-col md:flex-row gap-6">
@@ -376,7 +381,6 @@
                         <div class="grid grid-cols-1 gap-4">
                             <!-- キャラクター選択 -->
                             <div>
-                                <label class="block text-sm font-medium text-parrot-orange mb-2">キャラクター選択</label>
                                 <div class="flex gap-3">
                                     <div id="tee-chan" class="character-option flex-1 border-2 border-parrot-lightorange rounded-lg p-3 flex flex-col items-center selected">
                                         <span class="text-2xl mb-1">🦜</span>
@@ -387,7 +391,6 @@
                                         <span class="text-gray-500 font-medium">ココちゃん</span>
                                     </div>
                                 </div>
-                                <p class="text-xs text-parrot-orange mt-2 text-center">※選んだキャラクターの名前が日時の末尾に追加されます</p>
                             </div>
                             
                             <!-- 日付選択と時刻なしオプション -->
@@ -882,7 +885,7 @@
             }
         });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93e5964dc51cd553',t:'MTc0NzAwNzUxNi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93e5b4cfd7ca736c',t:'MTc0NzAwODc2Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
 <!-- partial -->
   
